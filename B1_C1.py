@@ -1,4 +1,3 @@
-
 import numpy as np
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense
@@ -11,7 +10,7 @@ l0 = Dense(units=1, input_shape=[1])
 #sequntial: define layers
 model = Sequential([l0])
 
-#model.compile: model approach
+#model.compile: model guess approach
 #optimizer='sgd':stochastic gradient descent, the way to guess and calcuate loss
 #loss='mean_squared_error': measure for loss function
 model.compile(optimizer='sgd', loss='mean_squared_error')
