@@ -56,3 +56,4 @@ classifications = model.predict(test_images)
 print(classifications[0])
 print(test_labels[0])
 
+

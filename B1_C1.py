@@ -28,3 +28,4 @@ print(model.predict([10.0]))
 #the model only has a single neuro and that neuron learns a weight(W) and bias(B) Y=WX + B
 print("Here is what I learned: {}".format(l0.get_weights()))
 
+#summary: a single neuron learning a linear relationship

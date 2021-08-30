@@ -18,7 +18,7 @@ training_images  = training_images / 255.0
 test_images = test_images.reshape(10000, 28, 28, 1)
 test_images = test_images / 255.0
 
-#tf.keras.layers.Conv2D: to implement a convolutional layer (filter that reduce the image to features)
+#tf.keras.layers.Conv2D: to implement a convolutional layer (filter that can tweak the image to features)
 #Conv2D(64,): learn 64 convolutions (i.e. randomly initialize and over time learn filter values that work best to match the input to their output)
 #Conv2D(,(3,3),): 3x3 sized filter of weights to multiply a pixel with its neighbours to get a new value of that pixel (transform/reduce image to features)
 #Conv2D(input_shape=(28,28,1)) 28x28 pixel with 1 color channel (3 RGB is for color image)
