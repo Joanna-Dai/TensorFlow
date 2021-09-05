@@ -15,7 +15,25 @@ zip_ref.close()
 
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 #crate an instance of ImageDataGenerator called train_datagen & all images will be rescaled by 1./255
-train_datagen = ImageDataGenerator(rescale=1/255)
+#with image augmentation (the elements after rescale): create additional new data by amending exisiting ones by using a number of transforms
+train_datagen = ImageDataGenerator(
+    #normalize the image pixel to [0,1] to ensure activation on neurons
+    rescale=1/255,
+    #rotating each image randomly up to 40 degree left or right
+    rotation_range=40,
+    #shifting the image up to 20% horizontally
+    width_shift_range=0.2,
+    #shifting the image by up to 20% vertically
+    height_shift_range=0.2,
+    #shearing the image by up to 20% (i.e. shift y (x) while x (y) stay the same)
+    shear_range=0.2,
+    #zooming the image by up to 20% (number=scale-up both width and height, <1 is zoom-in and >1 is zoom-out; list=[width_zoom_range, height_zoom_range])
+    zoom_range=0.2,
+    #randomly flipping the image horizontally (vertical=vertical_flip)
+    horizontal_flip=True,
+    #filling in any missing pixels after a move or shear with nearest neighbours
+    fill_mode='nearest'
+    )
 #specifications: binary=2 types of image; categorical=if more than two
 train_generator = train_datagen.flow_from_directory(
     training_dir,
@@ -93,4 +111,5 @@ history = model.fit_generator(
     validation_data=validation_generator
     )
 
-#model result: it showed ~100% accuracy on training set while ~80% on validation set, indicating overfitting
+#pre-augmentation result: it showed ~100% accuracy on training set while ~80% on validation set, indicating overfitting
+#post-augmentation result: it showed ~95% accuracy on training set and ~91% on validation set on the 14th epoch
