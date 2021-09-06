@@ -23,6 +23,7 @@ test_images = test_images / 255.0
 
 model = tf.keras.models.Sequential([tf.keras.layers.Flatten(input_shape=(28,28)),
                                     tf.keras.layers.Dense(256, activation=tf.nn.relu),
+                                    # introduce dropout each dense layer: randomly remove/ignore 20% neurons to reduce the chance of overspecialization for better generalization
                                     tf.keras.layers.Dropout(0.2),
                                     tf.keras.layers.Dense(128, activation=tf.nn.relu),
                                     tf.keras.layers.Dropout(0.2),
@@ -47,8 +48,8 @@ class myCallback(tf.keras.callbacks.Callback):
             self.model.stop_training = True
 callbacks = myCallback()
 #incorporate callbacks with higher epochs
-model.fit(training_images, training_labels, epochs=50, callbacks=[callbacks])
-
+#model.fit(training_images, training_labels, epochs=50, callbacks=[callbacks])
+model.fit(training_images, training_labels, epochs=50, callbacks=[callbacks], validation_data=(test_images,test_labels))
 #evaluate the model: pass trained model to have test data predict and sum up the result
 model.evaluate(test_images, test_labels)
 
@@ -56,4 +57,6 @@ classifications = model.predict(test_images)
 print(classifications[0])
 print(test_labels[0])
 
-
+# model result pre-dropout: 95% accuracy for training set and 90% accuracy fo validation set, indicating slight overfitting
+#                           (overspecialized neurons, neighbouring neurons end up with similar weight and bias)
+# model result post-dropout:92% accuracy for training set and 90% accuracy for validation set
