@@ -30,5 +30,5 @@ model = tf.keras.models.Sequential([
 
 model.compile(optimizer='Adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-# specify the number of validation steps to use per epoch
+# specify the number of validation steps to use per epoch (set it to 1 if not sure)
 history = model.fit(train_batches, epochs=10, validation_data=validation_batches, validation_steps=1)
