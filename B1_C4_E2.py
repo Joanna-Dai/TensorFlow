@@ -1,11 +1,12 @@
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-#tfds.as_numpy to covert tfds dataset for model.fit (while Keras datasets gave ndarray types that work natively in model.fit)
+# for comparison: B1_C2
+# tfds.as_numpy to covert tfds dataset for model.fit (while Keras datasets gave ndarray types that work natively in model.fit)
 (training_images, training_labels), (test_images, test_labels) =\
     tfds.as_numpy(tfds.load('fashion_mnist', split=['train', 'test'], batch_size=-1, as_supervised=True))
 
-#normalization
+# normalization
 training_images = training_images / 255.0
 test_images = test_images / 255.0
 
