@@ -18,3 +18,4 @@ def augmentimages(image, label):
 
 train=data.map(augmentimages)
 train_batches=train.shuffle(100).batch(32)
+
