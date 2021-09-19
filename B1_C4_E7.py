@@ -39,12 +39,16 @@ def augmentimages(image, label):
     return image, label
 
 train = data.map(augmentimages)
+# batch before train to serve the consistent pattern (pipelining model) for ETL
 train_batches = train.shuffle(100).batch(32)
 validation_batches = val_data.batch(32)
 # TRANSFORM PHASE END
 
 # 3. LOAD PHASE START #
+# GPU/TPU (training)
 history = model.fit(train_batches, epochs=10, validation_data=validation_batches, validation_steps=1)
 # LOAD PHASE END #
 
-# how you load the data can have huge impact on the training speed
+# How you load the data can have huge impact on the training speed --> Optimizing the load phase:
+#   Work Split: ET --> CPU; L (training) --> GPU/TPU
+#   Solution: training on a CPU/GPU (lots of idle time) < pipelining (preparing & training side by side)
