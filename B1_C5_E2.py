@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import string
 
-sentence = 'I really enjoyed walking in the snow today <br>'
+sentence = 'I really want to try <ac> <jd>'
 
 # 3 steps to clean up texts
 
