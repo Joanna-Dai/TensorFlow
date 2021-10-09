@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import string
 
-sentence = 'the world is the reflex of yourself'
+sentence = 'the world is the reflex of yourself <br>'
 
 # 3 steps to clean up texts
 
