@@ -20,6 +20,12 @@ for item in train_data:
     #the sentences are converted to lowercase given stopwords are stored in lowercase
     sentence = str(item['text'].decode('UTF-8').lower())
 
+    #avoid stripping of punctuation would incorrectly turn multi-words into single word
+    sentence = sentence.replace(",", " , ")
+    sentence = sentence.replace(".", " . ")
+    sentence = sentence.replace("-", " - ")
+    sentence = sentence.replace("/", " / ")
+
     #remove HTML tags such as <br>
     soup = BeautifulSoup(sentence)
     sentence = soup.get_text()
@@ -37,11 +43,14 @@ for item in train_data:
     imdb_sentences.append(filtered_sentence)
 
 #create a tokenizer object with maximum 5000 tokens/unique words from the corpus of the words
-tokenizer = tf.keras.preprocessing.text.Tokenizer(num_words=50)
+tokenizer = tf.keras.preprocessing.text.Tokenizer(num_words=25000)
 
 #create the tokenized word index
 tokenizer.fit_on_texts(imdb_sentences)
 
-#pass tokens to list of sentences and give back a list sequences of tokens
+#pass tokens to list of sentences and give back a list sequences of tokens (decode)
 sequences = tokenizer.texts_to_sequences(imdb_sentences)
-print(tokenizer.word_index[0:20])
+
+reverse_word_index=dict([(value,key) for (key, value) in tokenizer.word_index.items()])
+
+print(tokenizer.word_index.items(1))
