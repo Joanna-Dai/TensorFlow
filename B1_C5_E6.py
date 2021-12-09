@@ -86,7 +86,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 vocab_size=20000 #voc is up to 20000 words
 max_length=10 #each sentence is up to 10 words
 trunc_type='post' #trancate longer sentences by cutting off the end
-padding_type='post' #pad shorter sentences at the end
+padding_type='post' #pad shorter sentences at the end to get setences be the same size and shape for training neural networks
 oov_tok='<OOV>' #use <OOV> (Out Of Vocabulary) to replace the word that is previously unseen in training set
 
 tokenizer = Tokenizer(num_words=vocab_size, oov_token=oov_tok)
