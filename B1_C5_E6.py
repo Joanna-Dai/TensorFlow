@@ -1,4 +1,4 @@
-#download csv dataset (twitter data on sentiment analysis) and save into local folder
+# download csv dataset (twitter data on sentiment analysis) and save into local folder
 import os
 import requests
 
@@ -10,7 +10,7 @@ with open(os.path.join(folder_dir, file_name), 'wb') as f:
     f.write(response.content)
 
 
-#define stopwords and punctuations
+# define stopwords and punctuations
 from bs4 import BeautifulSoup
 import string
 
@@ -33,9 +33,9 @@ table = str.maketrans('', '', string.punctuation)
 
 import csv
 
-#full range of emotional labels as a string containing the text
+# full range of emotional labels as a string containing the text
 sentences = []
-#sentiment is negative(0) or positive(1)
+# sentiment is negative(0) or positive(1)
 labels = []
 with open(file_name, encoding='UTF-8') as csvfile:
     reader = csv.reader(csvfile, delimiter=",")
@@ -60,15 +60,15 @@ with open(file_name, encoding='UTF-8') as csvfile:
             if word not in stopwords:
                 filtered_sentence = filtered_sentence + word + " "
         sentences.append(filtered_sentence)
-#check length of two value-sets (result: 35,327)
+# check length of two value-sets (result: 35,327)
 print(len(labels))
 print(len(sentences))
-#check the content of the first cleaned row
+# check the content of the first cleaned row
 print(labels[0])
 print(sentences[0])
 
 
-#split dataset into training and test subsets for training a model
+# split dataset into training and test subsets for training a model
 training_size=28000
 
 training_sentences=sentences[0:training_size]
@@ -79,7 +79,7 @@ testing_labels=labels[training_size:]
 print(len(training_sentences))
 
 
-#create the word index based on training set and use it for testing sequences
+# create the word index based on training set and use it for testing sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
@@ -90,7 +90,7 @@ padding_type='post' #pad shorter sentences at the end to get setences be the sam
 oov_tok='<OOV>' #use <OOV> (Out Of Vocabulary) to replace the word that is previously unseen in training set
 
 tokenizer = Tokenizer(num_words=vocab_size, oov_token=oov_tok)
-#create the word index based on training set
+# create the word index based on training set
 tokenizer.fit_on_texts(training_sentences)
 word_index = tokenizer.word_index
 
