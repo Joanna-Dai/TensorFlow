@@ -73,7 +73,7 @@ testing_labels=labels[training_size:]
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-vocab_size = 20000
+vocab_size = 10000
 max_length = 10
 trunc_type = 'post'
 padding_type = 'post'
@@ -105,11 +105,12 @@ import tensorflow as tf
 
 # tf.keras.layers.Embedding(vocab_size, embedding_dim): initialize embedding layer with vocab size and embedding dimensions, an array with embedding_dim for each word
 # the dimensions will be learned through backpropagation as the network learns by matching the training data to its labels
-
+embedding_dim=16
 # model architecture
 model=tf.keras.Sequential([
-    # initialize embedding layer: every word in 10000 voc size will be assigned 16 dimensional vectors
-    tf.keras.layers.Embedding(10000, 16),
+    # initialize embedding layer: every word in 10000 vocab size will be assigned 16 dimensional vectors
+    # note: vocab_size in tokenization stage and embedding stage should be aligned
+    tf.keras.layers.Embedding(vocab_size, embedding_dim),
     # feed the output embedding layer into a dense layer by using pooling
     # GlobalAveragePoooling: the dimensions of the embeddings are averaged out to produce a fixed-length output vector
     # 0 trainable parameters
@@ -124,9 +125,11 @@ model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy']
 #check num of para
 model.summary()
 
-#result after 30 epochs:
+#result after 30 epochs: training accuracy=98%, validation accuracy=76% (likely due to validation data contains words that aren't present in training data)
+#       indicators of overfitting: over the time, validation accuracy drops a little bit but validation loss increases sharply
+#       (i.e. the neural network is good at matching patterns in 'noisy' data in the training set that doesn't exist anywhere else. The better it gets at matching it, the worse the loss of the validation set will be.)
 num_epochs = 30
-history = model.fit((training_padded, training_labels), epochs=num_epochs, validation_data=(testing_padded, testing_labels), verbose=2)
+history = model.fit(training_padded, training_labels, epochs=num_epochs, validation_data=(testing_padded, testing_labels), verbose=2)
 
 
 
