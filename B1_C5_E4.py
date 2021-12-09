@@ -51,6 +51,11 @@ tokenizer.fit_on_texts(imdb_sentences)
 #pass tokens to list of sentences and give back a list sequences of tokens (decode)
 sequences = tokenizer.texts_to_sequences(imdb_sentences)
 
+#create a new dict with the reversed keys and values
 reverse_word_index=dict([(value,key) for (key, value) in tokenizer.word_index.items()])
 
-print(tokenizer.word_index.items(1))
+#sentences encoded as the one wih stopwords dropped
+decoded_review=' '.join([reverse_word_index.get(i,'?') for i in sequences[0]])
+
+print(tokenizer.word_index)
+print(decoded_review)
