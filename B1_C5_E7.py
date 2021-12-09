@@ -10,7 +10,7 @@ response=requests.get(url)
 with open(os.path.join(folder_dir, file_name), 'wb') as f:
     f.write(response.content)
 
-# initial preporcessing
+# initial pre-porcessing to define stopwords and punctuations
 from bs4 import BeautifulSoup
 import string
 
