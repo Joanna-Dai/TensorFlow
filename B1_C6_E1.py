@@ -69,12 +69,13 @@ testing_sentences=sentences[training_size:]
 training_labels=labels[0:training_size]
 testing_labels=labels[training_size:]
 
-# create word index based on training set and use it for testing set
+# tokenizer
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-vocab_size = 10000
-max_length = 10
+# create word index based on training set and use it for testing set
+vocab_size = 2000 #adjust from 10000 to 2000
+max_length = 85 #adjust from 100 to 85
 trunc_type = 'post'
 padding_type = 'post'
 oov_tok = '<OOV>'
@@ -90,6 +91,47 @@ training_padded = pad_sequences(training_sequences, padding=padding_type)
 testing_sequences = tokenizer.texts_to_sequences(testing_sentences)
 testing_padded = pad_sequences(testing_sequences, padding=padding_type)
 
+
+# exploring vocab_size
+from collections import OrderedDict
+wc = tokenizer.word_counts
+# sort vocab into descending order of word volume
+newlist = (OrderedDict(sorted(wc.items(), key=lambda t: t[1], reverse=True)))
+# print(newlist)
+# plot word frequency
+# the 'hockey stick' curve shows very few words are used many times while most words are used very few times
+# but every word is weighted equally (has an 'entry' in the embedding), with large training set and samll val set, that's why many words in train set aren't present in val set
+import matplotlib.pyplot as plt
+xs=[]
+ys=[]
+curr_x = 1
+for item in newlist:
+  xs.append(curr_x)
+  curr_x=curr_x+1
+  ys.append(newlist[item])
+
+plt.plot(xs,ys)
+# look at the volume of the words (no. 300-10000 on the x-axis) with the scale from 0-100 on the y-axis
+plt.axis([300, 10000, 0, 100])
+# result: we found for the words in positions 2000-10000, they are ued less than 20 times in entire corpus, which also explains the overfitting
+# therefore, we changed the vocab_size from 10000 to 2000 (note cut based on 20 times frequency is arbitrary)
+plt.show()
+
+
+# explore max_length
+# result: ~26090 (i.e. 26090/26709=98%) sentences have no-more-than 85 words, max_length=85 can improve model performance
+xs=[]
+ys=[]
+current_item=1
+for item in sentences:
+    xs.append(current_item)
+    current_item=current_item+1
+    ys.append(len(item))
+newys=sorted(ys)
+plt.plot(xs, newys)
+plt.show()
+
+
 # convert training and testing set from array to numpy format for tensorflow training
 import numpy as np
 
@@ -98,39 +140,69 @@ testing_padded = np.array(testing_padded)
 training_labels = np.array(training_labels)
 testing_labels = np.array(testing_labels)
 
-
 # Step 2: embeddings
 
 import tensorflow as tf
 
 # tf.keras.layers.Embedding(vocab_size, embedding_dim): initialize embedding layer with vocab size and embedding dimensions, an array with embedding_dim for each word
 # the dimensions will be learned through backpropagation as the network learns by matching the training data to its labels
-embedding_dim=16
+# best practice for embedding_dim is fourth root of vocab_size, also, lower embedding_dim means faster training speed
+embedding_dim=7 # fourth root of 2000 is 6.69
 # model architecture
 model=tf.keras.Sequential([
+
     # initialize embedding layer: every word in 10000 vocab size will be assigned 16 dimensional vectors
     # note: vocab_size in tokenization stage and embedding stage should be aligned
     tf.keras.layers.Embedding(vocab_size, embedding_dim),
+
     # feed the output embedding layer into a dense layer by using pooling
     # GlobalAveragePoooling: the dimensions of the embeddings are averaged out to produce a fixed-length output vector
     # 0 trainable parameters
     tf.keras.layers.GlobalAveragePooling1D(),
+
     # 24-neuron dense layer: hyperparameter tunning to learn #para=24-neuron x (16-dimension +1-bias) = 24x17=408
-    tf.keras.layers.Dense(24, activation='relu'),
+    # reduce 24 to 8 (with embedding_dim=7)
+    tf.keras.layers.Dense(8, activation='relu'),
+
+    # dense layer with L2 regularization (ridge regression, amplify the differences between nonzero, zero close-to-zero values, more commonly used in NLP, note L1 called lasso, helps to ignore the zero or close-to-zero weights)
+    #                                    take a floating-point value as the regularization factor, result: smooth out training loss and validation loss somewhat (74% train acc, 71% val acc, 0.6 val loss, 30-epoch)
+    # tf.keras.layers.Dense(8, activation='relu', kernel_regularizer = tf.keras.regularizers.l2(0.01)),
+
+    # drop out 2 out of 8 neurons, but it doesn't work well as dropout is not good to reduce overfitting if there are very few neurons
+    # tf.keras.layers.Dropout(.25)
+
     # single-neuron dense layer for binary classification: #para=1-neuron x 24-output of previous layer + 1-bias=25
     tf.keras.layers.Dense(1, activation='sigmoid')
 ])
-model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+# change the default learning rate (0.001) for adam to mitigate overfitting (likey caused by network learns too quickly)
+adam = tf.keras.optimizers.Adam(learning_rate=0.0001, beta_1=0.9, beta_2=0.999, amsgrad=False)
+# optimizer='adam' is using default adam
+model.compile(loss='binary_crossentropy', optimizer=adam, metrics=['accuracy'])
 
 #check num of para
 model.summary()
 
-#result after 30 epochs: training accuracy=98%, validation accuracy=76% (likely due to validation data contains words that aren't present in training data)
-#       indicators of overfitting: over the time, validation accuracy drops a little bit but validation loss increases sharply
-#       (i.e. the neural network is good at matching patterns in 'noisy' data in the training set that doesn't exist anywhere else. The better it gets at matching it, the worse the loss of the validation set will be.)
+# pre-adjustment: result after 30 epochs - training accuracy=98%, validation accuracy=76% (likely due to validation data contains words that aren't present in training data)
+#                       indicators of overfitting: over the time, validation accuracy drops a little bit but validation loss increases sharply (val_loss=2.2)
+#                       (i.e. the neural network is good at matching patterns in 'noisy' data in the training set that doesn't exist anywhere else. The better it gets at matching it, the worse the loss of the validation set will be.)
+# lower learning_rate: 30-epoch result - training accuracy=92%, validation accuracy=80%, val_loss=0.51 (smaller val loss)
+# + lower vocab_size: 30-epoch result - training accuracy=82%, validation accuracy=76%, val_loss=0.51 (closer train & val accuracy)
+# + lower embedding_dim: 30-epoch result - training accuracy=81%, validation accuracy=76%, val_loss=0.51 (closer accuracy & faster speed)
+# + less neurons for dense layer: 30-epoch result - similar accuracy & loss, the lines (of train, val) being less jaggy
 num_epochs = 30
 history = model.fit(training_padded, training_labels, epochs=num_epochs, validation_data=(testing_padded, testing_labels), verbose=2)
 
 
+# use model to classify a sentence
+sample_sentences=["granny starting to fear spiders in the garden might be real",
+                  "game of thrones season finale showing this sunday night",
+                  "TensorFlow book will be a best seller"]
+
+sample_sequences=tokenizer.texts_to_sequences(sample_sentences)
+print(sample_sequences)
+
+padded_sample=pad_sequences(sample_sequences, maxlen=max_length, padding=padding_type, truncating=trunc_type)
+print(padded_sample)
+print(model.predict(padded_sample))
 
 
