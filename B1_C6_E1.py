@@ -203,6 +203,28 @@ print(sample_sequences)
 
 padded_sample=pad_sequences(sample_sequences, maxlen=max_length, padding=padding_type, truncating=trunc_type)
 print(padded_sample)
+# result: higher values indicate likely sarcasm (the first sentence shows higher score)
 print(model.predict(padded_sample))
 
 
+# visualize embeddings
+reverse_word_index = dict([value, key] for (key, value) in word_index.items())
+e = model.layers[0] # embeddings layer
+weights = e.get_weights()[0] #extract the weights of the vectors in the embeddings
+print(weights.shape) # (2000,7) given 2000 vocab_size and 7 embedding_dim
+# explore a word and its vector details
+print(word_index['<OOV>']) # word_index start from 1
+print(reverse_word_index[2]) # the most frequently used word apart from <OOV>
+print(weights[2]) # the word is represented with 7 coefficients on the 7 dimensions/axes
+# embedding projector uses two tab-seperated values (tsv) fils as full details, 1 for vector dimensions and 1 for metadata (narratives)
+import io
+out_v = io.open('C:/Users/user/tensorflow_datasets/vecs.tsv', 'w', encoding='utf-8')
+out_m = io.open('C:/Users/user/tensorflow_datasets/meta.tsv', 'w', encoding='utf-8')
+for word_num in range(1, vocab_size):
+    word = reverse_word_index[word_num]
+    embeddings = weights[word_num]
+    out_m.write(word+"\n")
+    out_v.write('\t'.join([str(x) for x in embeddings]) + "\n")
+out_v.close()
+out_m.close()
+# visualize embeddings by loading above vector & meta tsv files over http://projector.tensorflow.org/
