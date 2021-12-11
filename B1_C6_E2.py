@@ -119,11 +119,11 @@ plot_graphs(history, "loss")
 
 # use model to predict test sentences
 test_sentences = ["granny starting to fear spiders in the garden might be real",
- "game of thrones season finale showing this sunday night",
- "TensorFlow book will be a best seller"]
+                  "game of thrones season finale showing this sunday night",
+                  "TensorFlow book will be a best seller"]
 
 predictions = model.predict(test_sentences)
 print(predictions)
 
 # Either B1_C6_E1 or B1_C6_E2, they simply treated each sentence as a bunch of words (to classify sentences).
-# There was no inherent sequences invovled while the order is very important in determining the real meaning of a setence.
+# There was no inherent sequences invovled, but the order of the appearance of words is very important in determining the real meaning of a setence.
