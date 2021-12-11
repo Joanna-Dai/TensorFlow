@@ -62,7 +62,7 @@ print(len(sentences))
 
 
 # split the dataset into training set and testing set
-training_size=23000
+training_size = 23000
 
 training_sentences=sentences[0:training_size]
 testing_sentences=sentences[training_size:]
@@ -153,6 +153,7 @@ model=tf.keras.Sequential([
 
     # initialize embedding layer: every word in 10000 vocab size will be assigned 16 dimensional vectors
     # note: vocab_size in tokenization stage and embedding stage should be aligned
+    # backpropagation
     tf.keras.layers.Embedding(vocab_size, embedding_dim),
 
     # feed the output embedding layer into a dense layer by using pooling
@@ -189,7 +190,8 @@ model.summary()
 # + lower vocab_size: 30-epoch result - training accuracy=82%, validation accuracy=76%, val_loss=0.51 (closer train & val accuracy)
 # + lower embedding_dim: 30-epoch result - training accuracy=81%, validation accuracy=76%, val_loss=0.51 (closer accuracy & faster speed)
 # + less neurons for dense layer: 30-epoch result - similar accuracy & loss, the lines (of train, val) being less jaggy
-num_epochs = 30
+# + with 100 epochs, train acc=0.82%, val acc=0.76%, val loss=0.54
+num_epochs = 100 # adjusted from 30 to 100
 history = model.fit(training_padded, training_labels, epochs=num_epochs, validation_data=(testing_padded, testing_labels), verbose=2)
 
 
