@@ -115,15 +115,20 @@ embedding_dim=64 # adjusted up for RNN
 model=tf.keras.Sequential([
 
     # initialize embedding layer (backpropagation)
+    # para#=20000*64=1,280,000
     tf.keras.layers.Embedding(vocab_size, embedding_dim),
 
     # the RNN layer using bidirectional LSTM
+    # neuron#=64(out)+64(back)=128
+    # para#=4 * [(64-unit + 64-input + 1-bias) * 64-unit) x 4 x 2-direction=66048
     tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(embedding_dim)),
 
     # 24-neuron dense layer: adjusted up for RNN
+    # para#=24-neuron x (128-p_dimension + 1)= 3096
     tf.keras.layers.Dense(24, activation='relu'),
 
     # single-neuron dense layer for binary classification: #para=1-neuron x 24-output of previous layer + 1-bias=25
+    # para#=1-neuron x (24-p_neuron + 1-bias)=25
     tf.keras.layers.Dense(1, activation='sigmoid')
 ])
 
