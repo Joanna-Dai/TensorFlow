@@ -169,4 +169,5 @@ def plot_graphs(history, string):
 plot_graphs(history, "accuracy")
 plot_graphs(history, "loss")
 
-# 30-epoch result: train_acc=98% val_acc=57%, val_loss=0.98 --> overfitting (model is overspecialized for the training set) --> stacking LTSMs is not good for this project
+# 30-epoch result: train_acc=98% val_acc=57%, val_loss=0.98 --> overfitting (model is overspecialized for the training set)
+
