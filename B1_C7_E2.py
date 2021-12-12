@@ -8,6 +8,7 @@ import requests
 
 url = "https://storage.googleapis.com/laurencemoroney-blog.appspot.com/sarcasm.json"
 folder_dir = "C:/Users/user/tensorflow_datasets"
+
 file_name = "sarcasm.json"
 response=requests.get(url)
 with open(os.path.join(folder_dir, file_name), 'wb') as f:
@@ -121,14 +122,16 @@ model=tf.keras.Sequential([
     # the first RNN layer using bidirectional LSTM
     # neuron#=64(out)+64(back)=128
     # para#=4 x [(64-unit + 64-input + 1-bias) * 64-unit) x 4 x 2-direction=66048
-    # note: all the layers prior to the last LSTM layer need "return_sequences=True"
-    tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(embedding_dim, return_sequences=True)),
+    # return_sequences=True: all the layers prior to the last LSTM layer need the term
+    # dropout=0.2: randomly drop 20% neurons to mitigate overfitting (but will slow down training)
+    tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(embedding_dim, return_sequences=True, dropout=0.2)),
 
     # the second/last LSTM layer
     # stack on top of last LSTM layer just like stacking dense layers (stacking LSTMs approach is used in mny state-of-the-art NLP models)
     # para#=4 x [(64-unit + 128-input + 1-bias) * 64-unit) x 4 x 2-direction=98816
     # this extra layer gives extra 98816 parameters, an increase of (98816/p_total 1349169) 7.3%, slow network down but reasonable given benefit-cost
-    tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(embedding_dim)),
+    # dropout=0.2: randomly drop 20% neurons to mitigate overfitting
+    tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(embedding_dim, dropout=0.2)),
 
     # 24-neuron dense layer: adjusted up for RNN
     # para#=24-neuron x (128-p_dimension + 1)= 3096
@@ -140,7 +143,8 @@ model=tf.keras.Sequential([
 ])
 
 # change the default learning rate (0.001) for adam to mitigate overfitting (likey caused by network learns too quickly)
-adam = tf.keras.optimizers.Adam(learning_rate=0.00001, beta_1=0.9, beta_2=0.999, amsgrad=False)
+# decrease learning_rate by 20% from 0.00001 to 0.000008 can mitigate overfitting
+adam = tf.keras.optimizers.Adam(learning_rate=0.000008, beta_1=0.9, beta_2=0.999, amsgrad=False)
 
 # optimizer='adam' is using default adam
 model.compile(loss='binary_crossentropy', optimizer=adam, metrics=['accuracy'])
@@ -169,5 +173,5 @@ def plot_graphs(history, string):
 plot_graphs(history, "accuracy")
 plot_graphs(history, "loss")
 
-# 30-epoch result: train_acc=98% val_acc=57%, val_loss=0.98 --> overfitting (model is overspecialized for the training set)
-
+# 30-epoch result (pre-dropout): train_acc=98% val_acc=57%, val_loss=0.98 --> overfitting (model is overspecialized for the training set)
+# 30-epoch result (optimized: post-dropout & learning rate): train_acc=91%, val_acc=70%, val_loss=0.57 (add dropout has positive impact, lower learning rate lower rate of loss)
