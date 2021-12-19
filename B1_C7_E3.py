@@ -7,10 +7,10 @@
 import zipfile
 
 # unzip it into named directory
-# local_zip = "C:/Users/user/tensorflow_datasets/glove.zip"
-# zip_ref = zipfile.ZipFile(local_zip, 'r')
-# zip_ref.extractall("C:/Users/user/tensorflow_datasets/glove")
-# zip_ref.close()
+local_zip = "C:/Users/user/tensorflow_datasets/glove.zip"
+zip_ref = zipfile.ZipFile(local_zip, 'r')
+zip_ref.extractall("C:/Users/user/tensorflow_datasets/glove")
+zip_ref.close()
 
 
 import numpy as np
