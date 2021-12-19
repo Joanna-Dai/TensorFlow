@@ -138,7 +138,7 @@ testing_labels = np.array(testing_labels)
 embedding_dim = 25
 # start from an i (row #) x j (col #) zero matrix
 # i.e. create a matrix with the dimension of desired vocab_size and the embedding dimension
-embedding_matrix = np.zeros((vocab_size, embeddings_dim))
+embedding_matrix = np.zeros((vocab_size, embedding_dim))
 for word, index in tokenizer.word_index.items():
     if index > vocab_size-1:
         break
@@ -228,4 +228,18 @@ def plot_graphs(history, string):
 
 plot_graphs(history, "accuracy")
 plot_graphs(history, "loss")
+# the model shows good 30-epoch results: train_acc=73%, val_acc=72%, val_loss=0.55 (also early stopping is good)
 
+# test some sentences
+sample_sentences = ["It Was, For, Uh, Medical Reasons, Says Doctor To Boris Johnson, Explaining Why They Had To Give Him Haircut",
+                  "It's a beautiful sunny day",
+                  "I lived in Ireland, so in High School they made me learn to speak and write in Gaelic",
+                  "Census Foot Soldiers Swarm Neighborhoods, Kick Down Doors To Tally Household Sizes"]
+
+sample_sequences=tokenizer.texts_to_sequences(sample_sentences)
+print(sample_sequences)
+
+padded_sample=pad_sequences(sample_sequences, maxlen=max_length, padding=padding_type, truncating=trunc_type)
+print(padded_sample)
+# result: close to 0.5=neutral; close to 1=sarcastic; close to 0=nonsarcastic
+print(model.predict(padded_sample))
