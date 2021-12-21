@@ -21,10 +21,30 @@ print(total_words)
 
 # split the sentence/line into multiple smaller sequences
 input_sequences = []
+# loop each line of the song
 for line in corpus:
+    # tokenize the line and change list "[[ ]]" to "[ ]" by putting [0]
 	token_list = tokenizer.texts_to_sequences([line])[0]
+    # loop smaller sequences of the line and start from (word 0 + word 1)
 	for i in range(1, len(token_list)):
+        # start from first two words and end with full line, note for list, list[:n+1]-->[0,n+1)-->[0,n]
 		n_gram_sequence = token_list[:i+1]
+        # append batch of smaller sequences of each line to the input_sequences
 		input_sequences.append(n_gram_sequence)
 
-#print(tokenizer.texts_to_sequences([line]))
+# print full input_sequences
+print(input_sequences)
+# print smaller sequences of the first line
+print(input_sequences[:7])
+
+# pad all input_sequences into a regular shape
+max_sequence_len = max(len(x) for x in input_sequences) # find the longest sentence in the input sequences first
+input_sequences = np.array(pad_sequences(input_sequences, maxlen=max_sequence_len, padding='pre'))
+
+# print padded smaller sequences of the first line
+print(input_sequences[:7])
+
+# split smaller sequences into features (the sequence without last word) and label (the last word of the sequence)
+# input_sequences[:, :-1]: list of input_sequences without last words of each input_sequence
+# input_sequences[:, -1]: list of the last words of each input_sequences
+xs, labels=input_sequences[:, :-1], input_sequences[:, -1]
