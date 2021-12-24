@@ -47,4 +47,9 @@ print(input_sequences[:7])
 # split smaller sequences into features (the sequence without last word) and label (the last word of the sequence)
 # input_sequences[:, :-1]: list of input_sequences without last words of each input_sequence
 # input_sequences[:, -1]: list of the last words of each input_sequences
-xs, labels=input_sequences[:, :-1], input_sequences[:, -1]
+xs, labels = input_sequences[:, :-1], input_sequences[:, -1]
+# encode labels into a set of Ys (given output is a set of labels) that can be used to train (can eat memory very quickly)
+ys = tf.keras.utils.to_categorical(labels, num_classes=total_words)
+
+# model hierarchy
+
