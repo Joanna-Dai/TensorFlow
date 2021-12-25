@@ -43,6 +43,8 @@ input_sequences = np.array(pad_sequences(input_sequences, maxlen=max_sequence_le
 
 # print padded smaller sequences of the first line
 print(input_sequences[:7])
+# 453 smaller sequences in total
+print(len(input_sequences))
 
 # split smaller sequences into features (the sequence without last word) and label (the last word of the sequence)
 # input_sequences[:, :-1]: list of input_sequences without last words of each input_sequence
@@ -51,5 +53,53 @@ xs, labels = input_sequences[:, :-1], input_sequences[:, -1]
 # encode labels into a set of Ys (given output is a set of labels) that can be used to train (can eat memory very quickly)
 ys = tf.keras.utils.to_categorical(labels, num_classes=total_words)
 
+# the example small sentence
+print(input_sequences[5])
+# the x of example small sentence
+print(xs[5])
+# the label of example small sentence
+print(labels[5])
+# the corresponding y of example small sentence
+print(ys[5])
+# same with the total number of smaller sequences
+print(len(ys))
+
 # model hierarchy
+model = Sequential()
+# embedding layer: vocab_size=total_words, embedding_dim=8
+model.add(Embedding(total_words, 8))
+# bidirectional LSTM as RNN layer: steps # = max_seq_len - 1 label at the end
+model.add(Bidirectional(LSTM(max_sequence_len-1)))
+# dense layer: neurons # = total words, activated by softmax (each neuron will be the prob. that the next word matches the word for that index value)
+model.add(Dense(total_words, activation='softmax'))
+
+# model guess approach
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+# given the data is not a lot, model can be trained for a long time (1500 epoch)
+# result: accuracy=93%, loss=0.26
+# --> if we have a string of text already seen will predict the next word accurately about 95% of the time. If not previously seen, despite good accuracy, the network will still end up producing nonsensical text
+# verbose = 0: will show you nothing (silent)
+# verbose=1 will show you an animated progress bar like this: [============]
+# verbose=2 will just mention the number of epoch like this: Epoch 1499/1500
+history = model.fit(xs, ys, epochs=1500, verbose=1) #1500
+
+# predicting the next word
+# creating a phrase (initial expression on which the network will base all the content it generates)
+seed_text = "in the town of athy"
+# tokenize the seed text (texts_to_sequences returns an array even there's only one sentence/value, so use [0] to take the first element (i.e. the sentence))
+token_list = tokenizer.texts_to_sequences([seed_text])[0]
+# pad the seed sequence into the same shape
+token_list = pad_sequences([token_list], maxlen=max_sequence_len-1, padding='pre')
+# model.predict: predict the next word for the padded token list and it will return the prob. for each word in the corpus
+# np.argmax: pass the prob. to np.argmax to get the most likely one (axis=-1 means max. the last dimension of data shape)
+predicted = np.argmax(model.predict(token_list), axis=-1)
+# result: 68
+print(predicted)
+# search through the word index items until find predicted an print it out
+# result: the most likely word (predicted by model) for the seed text is one
+for word, index in tokenizer.word_index.items():
+	if index == predicted:
+		print(word)
+		break
 
