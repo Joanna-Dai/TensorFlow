@@ -96,6 +96,10 @@ token_list = pad_sequences([token_list], maxlen=max_sequence_len-1, padding='pre
 predicted = np.argmax(model.predict(token_list), axis=-1)
 # result: 68
 print(predicted)
+# array as a series of [class: probability]
+pred_classes = model.predict(token_list)
+# result: 85% (get the prob. of the most likely next word)
+print(pred_classes.reshape(-1)[predicted])
 # search through the word index items until find predicted an print it out
 # result: one --> the most likely word (predicted by model) for the seed text
 for word, index in tokenizer.word_index.items():
