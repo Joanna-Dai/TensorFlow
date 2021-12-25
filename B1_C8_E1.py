@@ -97,9 +97,35 @@ predicted = np.argmax(model.predict(token_list), axis=-1)
 # result: 68
 print(predicted)
 # search through the word index items until find predicted an print it out
-# result: the most likely word (predicted by model) for the seed text is one
+# result: one --> the most likely word (predicted by model) for the seed text
 for word, index in tokenizer.word_index.items():
 	if index == predicted:
 		print(word)
 		break
 
+
+# generate text by compounding predictions
+seed_text = "sweet jeremy saw dublin"
+next_words = 10
+# repeat the prediction to have 10 next words (i.e. AI-created string of text)
+for _ in range(next_words):
+	token_list = tokenizer.texts_to_sequences([seed_text])[0]
+	token_list = pad_sequences([token_list], maxlen = max_sequence_len -1, padding='pre')
+	# model.predict_classes will return category not value (i.e. it's de factor same with np.argmax(model.predict())
+	# model.predict_classes were removed in tensorflow 2.6
+	predicted = np.argmax(model.predict(token_list, verbose=0), axis=-1)
+	output_word = ""
+
+	for word, index in tokenizer.word_index.items():
+		if index == predicted:
+			output_word = word
+			break
+	seed_text += " " + output_word # append output word to generate the extended text after the seed text
+
+
+# result: sweet jeremy saw dublin a minute was painted finnertys up we couples by spent
+# reasons for semi-random result:
+# 	1) training body is small
+# 	2) poor match for the previous words (for which the next words rely on) and resulted in low-prob next words
+# 	3) higher low-prob for next next words after predicting (previous + low-prob next words)
+print(seed_text)
