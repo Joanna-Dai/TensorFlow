@@ -30,17 +30,24 @@ window_size = 10
 sentences = []
 alltext = []
 max_sequence_len = 6
-
+# converted to lower case
 corpus = data.lower()
+# split into an array of words
 words = corpus.split(" ")
+
+# i is the index of the first word of the smaller sequence
+#   the largest possible value for i = range_size (note max_sequence_len = size of the moving window/smaller sequence)
 range_size = len(words)-max_sequence_len
 for i in range(0, range_size):
 	thissentence=""
+    # loop through each word and make sentence of each word from the current index up to the current index plus max_sequence_len (window size)
 	for word in range(0, max_sequence_len-1):
 		word = words[i+word]
 		thissentence = thissentence + word
 		thissentence = thissentence + " "
+    # add each newly constructed sentences into sentences array
 	sentences.append(thissentence)
+# on above way, we have number of smaller sequences (for training): range_size x max_sequence_len = (num_words - window_size) x window_size
 
 oov_tok = "<OOV>"
 vocab_size=2700
@@ -83,7 +90,6 @@ model.add(Embedding(total_words, 8))
 # improve model by using multiple stacked LSTMs
 model.add(Bidirectional(LSTM(max_sequence_len-1, return_sequences='True')))
 model.add(Bidirectional(LSTM(max_sequence_len-1)))
-
 model.add(Dense(total_words, activation='softmax'))
 # model guess approach
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
