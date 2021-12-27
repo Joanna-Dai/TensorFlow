@@ -79,9 +79,38 @@ def moving_average_forecast(series, window_size):
   """Forecasts the mean of the last few values.
      If window_size=1, then this is equivalent to naive forecast"""
   forecast = []
-  for time in range(len(series) - window_size):
-    forecast.append(series[time:time + window_size].mean())
+  for time in range(len(series) - window_size): # if window_size=2: time in range(1000-2), i.e. the 998 points in [0,998)
+    forecast.append(series[time:time + window_size].mean()) # if time=0: series[0:0+2].mean() --> the mean of the series(0) and series(1)
+                                                            # if time=1: series[1:1+2].mean() --> the mean of series(1) and series(2)
+                                                            #...if time=997: series[997:999].mean()--> the mean of series(997) and series(998)
   return np.array(forecast)
+# the first point
+print(series[0:30].mean())
+print(moving_average_forecast(series,30)[0])
+# the last point (note: the last t & value in original time series is not used)
+print(series[-31:-1].mean())
+print(series[1430:1460].mean())
+# print(series[1431:1461].mean()) --> this point is not included in the series
+print(moving_average_forecast(series,30)[-1])
+print(moving_average_forecast(series,30)[1430])
+print(len(moving_average_forecast(series, 30))) # here we have 1431 moving average points while theorectically should have 1461-30+1=1432
+# get forecasted for validation set: the 461 points from series[970] to series[1430]
+moving_avg_forecast = moving_average_forecast(series, 30)[split_time-30:]
+print(len(moving_avg_forecast))
+# plot the comparison
+plt.figure(figsize=(10,6))
+plot_series(time_valid, x_valid)
+plot_series(time_valid, moving_avg_forecast)
+plt.show()
+# prediction accuracy (better than naive_forecast) but it doesn't take seasonality and noise into account
+# MSE: mean squared error
+print(keras.metrics.mean_squared_error(x_valid, moving_avg_forecast).numpy()) #49.04
+# MAE: mean absolute error
+print(keras.metrics.mean_absolute_error(x_valid, moving_avg_forecast).numpy()) #5.53
 
+# improve the moving average prediction
+# differencing for seasonality and trend: diff[t] = value[t] - value[t-365]
+diff_series = (series[365:] - series[:-365] ) #given the period of seasonality is 365
+diff_time = time[365:]
 
-
+diff_moving_avg =
