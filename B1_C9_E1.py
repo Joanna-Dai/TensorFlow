@@ -112,5 +112,3 @@ print(keras.metrics.mean_absolute_error(x_valid, moving_avg_forecast).numpy()) #
 # differencing for seasonality and trend: diff[t] = value[t] - value[t-365]
 diff_series = (series[365:] - series[:-365] ) #given the period of seasonality is 365
 diff_time = time[365:]
-
-diff_moving_avg =
