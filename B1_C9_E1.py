@@ -110,5 +110,30 @@ print(keras.metrics.mean_absolute_error(x_valid, moving_avg_forecast).numpy()) #
 
 # improve the moving average prediction
 # differencing for seasonality and trend: diff[t] = value[t] - value[t-365]
-diff_series = (series[365:] - series[:-365] ) #given the period of seasonality is 365
+diff_series = (series[365:] - series[:-365] ) # seasonality and trend should be offset --> slope x c + noise
 diff_time = time[365:]
+print(len(diff_series))
+# plot the differencing
+plt.figure(figsize=(10, 6))
+plot_series(diff_time, diff_series)
+plt.show()
+# moving average of the differencing
+diff_moving_avg = moving_average_forecast(diff_series, 50)[split_time-50-365:]
+print(len(diff_moving_avg)) # 1096 (diff_series) -50=1046 in total; [1000-30-365:]=[585:] --> 1046-585=461
+# plot moving average of differencing
+plt.figure(figsize=(10, 6))
+plot_series(time_valid, diff_series[split_time - 365:])
+plot_series(time_valid, diff_moving_avg)
+plt.show()
+# add moving average of differencing to moving average of past values
+diff_moving_avg_plus_smooth_past = moving_average_forecast(series[split_time - 370:-360], 10) + diff_moving_avg
+print(len(moving_average_forecast(series[split_time - 370:-360], 10)))
+print(len(diff_moving_avg))
+# plot the comparison
+plt.figure(figsize=(10, 6))
+plot_series(time_valid, x_valid)
+plot_series(time_valid, diff_moving_avg_plus_smooth_past)
+plt.show()
+# measure the prediction accuracy (best of the three)
+print(keras.metrics.mean_squared_error(x_valid, diff_moving_avg_plus_smooth_past).numpy()) # 40.9
+print(keras.metrics.mean_absolute_error(x_valid, diff_moving_avg_plus_smooth_past).numpy()) # 5.14
