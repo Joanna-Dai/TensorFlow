@@ -1,5 +1,5 @@
 # predicting time series
-
+import keras.metrics
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,7 +36,6 @@ def plot_series(time, series, format="-", start=0, end=None):
     plt.xlabel("Time")
     plt.ylabel("Value")
     plt.grid(True)
-    plt.show()
 
 
 # set parameters for trend, seasonality and noise
@@ -60,5 +59,29 @@ x_train = series[:split_time] # returned series for training points
 time_valid = time[split_time:] # the rest 461 time points starting from 1000, which is [1000, 1460] in this case
 x_valid = series[split_time:] # returned series for validation points
 
-# naive forecast: predict series from a split time period onwards
-naive_forecast = series[split_time-1: -1]
+
+# prediction 1 - naive forecast: predict series by taking the value at time t-1 to be the forecasted value at time t
+naive_forecast = series[split_time-1: -1] # intentionally have 1 step difference
+# show two series in the same graph
+plt.figure(figsize=(10, 6))
+plot = plot_series(time_valid, x_valid)
+plot = plot_series(time_valid, naive_forecast)
+plt.show()
+# measure the prediction accuracy
+# MSE: mean squared error
+print(keras.metrics.mean_squared_error(x_valid, naive_forecast).numpy()) #76.475
+# MAE: mean absolute error
+print(keras.metrics.mean_absolute_error(x_valid, naive_forecast).numpy()) #6.899
+
+
+# prediction 2 - moving average: average out a group of values and set that as the predicted value at t
+def moving_average_forecast(series, window_size):
+  """Forecasts the mean of the last few values.
+     If window_size=1, then this is equivalent to naive forecast"""
+  forecast = []
+  for time in range(len(series) - window_size):
+    forecast.append(series[time:time + window_size].mean())
+  return np.array(forecast)
+
+
+
