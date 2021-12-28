@@ -1,6 +1,7 @@
 # create windowed dataset: structure the time series data for training predictive model
 #   to turn any time series into a set of training data for a neural network
 import tensorflow as tf
+
 # create basic dataset containing 0-9
 dataset = tf.data.Dataset.range(10)
 # dataset.window(5): split dataset into windows of 5 items
@@ -27,5 +28,3 @@ dataset = dataset.batch(2).prefetch(1)
 for x, y in dataset:
     print("x=", x.numpy())
     print("y=", y.numpy())
-
-
