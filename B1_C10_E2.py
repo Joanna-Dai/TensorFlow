@@ -95,3 +95,41 @@ model.compile(loss="mse", optimizer=tf.keras.optimizers.SGD(lr=1e-6, momentum=0.
 # use training dataset to train the model
 # pre-adj 100-epoch result: loss=35.49
 model.fit(dataset, epochs=100, verbose=1)
+
+# model.predict, given series data, pass the model values from t to t+window_size and then get predicted value for the next time step
+print(series[split_time:split_time+window_size]) #input series
+# predicted next value (103.50): [np.newaxis] in model.predict() to keep the input shape consistent
+print(model.predict(series[split_time:split_time+window_size][np.newaxis]))
+# actual next value: 106.26
+print(series[split_time+window_size])
+
+# overall result of model.predict
+forecast=[]
+# time labels starting index of the input array (series) and the index value of predicted array (forecast)
+for time in range(len(series)-window_size):
+    forecast.append(
+        model.predict(series[time:time+window_size][np.newaxis])
+    )
+
+# x_valid is from [split_time:]
+# forecast's split_time is based on window_size points before split_time: is time label should start from split_time-window_size then
+print(len(x_valid))
+print(len(forecast)) #off by 20 (window_size)
+print(forecast)
+# rearrange the array to be in the same shape of x_valid
+forecast = forecast[split_time-window_size:]
+results = np.array(forecast)
+print(results.shape)
+# slice the array: for all elements, get (0,0) from the (461,1,1) array and make it (461,) array
+results = results[:, 0, 0]
+print(results.shape)
+print(results)
+
+# visualize the comparison between forecasted values vs. actual values
+plt.figure(figsize=(10,6))
+plot_series(time_valid,x_valid)
+plot_series(time_valid,results)
+plt.show()
+
+# measure the accuracy: MAE=4.91
+print(tf.keras.metrics.mean_absolute_error(x_valid, results).numpy())
