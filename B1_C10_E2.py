@@ -87,14 +87,27 @@ model = tf.keras.models.Sequential([
     # input_shape: input data is features (each feature set is of 20 (window_size) items)
     tf.keras.layers.Dense(10, input_shape=[window_size], activation="relu"),
     tf.keras.layers.Dense(10, activation="relu"),
-    # output layer that contains the 1-shape predicted value
+    # output layer
+    # that contains the 1-shape predicted value
     tf.keras.layers.Dense(1)
 ])
 # loss function = mse, which is commonly used for regression problems
-model.compile(loss="mse", optimizer=tf.keras.optimizers.SGD(lr=1e-6, momentum=0.9))
+# hyperparameter tunning: learning rate (adjust from 1e-6 to callback: lr_schedule)
+#   lrs callback: start the lr at 1e-8 and every epoch increase it by a small amount (bigger epoch until 100--> bigger lr until 1e-8*(10^5)=1e-3)
+lr_scheldue = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-8 * 10**(epoch/20))
+#   lr start with 1e-8
+optimizer = tf.keras.optimizers.SGD(learning_rate=1e-8, momentum=0.9)
+model.compile(loss="mse", optimizer=optimizer)
 # use training dataset to train the model
 # pre-adj 100-epoch result: loss=35.49
-model.fit(dataset, epochs=100, verbose=1)
+# add callbacks for lr
+# post-adj 100-epoch
+history = model.fit(dataset, epochs=100, callbacks=[lr_scheldue], verbose=1)
+
+# plot loss against learning rate
+lrs = 1e-8 * (10 ** (np.arange(100) / 20))
+plt.semilogx(lrs, history.history["loss"])
+plt.axis([1e-8, 1e-3, 0, 300])
 
 # model.predict, given series data, pass the model values from t to t+window_size and then get predicted value for the next time step
 print(series[split_time:split_time+window_size]) #input series
@@ -127,8 +140,8 @@ print(results)
 
 # visualize the comparison between forecasted values vs. actual values
 plt.figure(figsize=(10,6))
-plot_series(time_valid,x_valid)
-plot_series(time_valid,results)
+plot_series(time_valid, x_valid)
+plot_series(time_valid, results)
 plt.show()
 
 # measure the accuracy: MAE=4.91
