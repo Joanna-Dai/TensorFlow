@@ -82,67 +82,69 @@ for feature, label in dataset.take(1):
 
 
 # tf.data.Dataset can be passed to model.fit as a single parameter and tf.keras will take care of the rest
-# simple DNN model:
+# model with keras tuner's hyperparameter tuning: train multi models. one with each possible set of parameters, evaluate the model to a metric you want
+dataset = windowed_dataset(x_train, window_size, batch_size, shuffle_buffer_size)
+
+from kerastuner.tuners import RandomSearch
+
+# hyperparameter parameter (hp) is used to control which values get changed
+def build_model(hp):
+  model = tf.keras.models.Sequential()
+  # the layer will be tested with several input values, starting with 10 and increasing to 30 in steps of 2: i.e. train (30-10)/2=11 times (for layers)
+  model.add(tf.keras.layers.Dense(units=hp.Int('units', min_value=10, max_value=30, step=2), activation='relu', input_shape=[window_size]))
+  model.add(tf.keras.layers.Dense(10, activation='relu'))
+  model.add(tf.keras.layers.Dense(1))
+
+  # using hp.choice for a few options of 4 values for momentum (end with 4x11=44 possible combinations)
+  model.compile(loss="mse", optimizer=tf.keras.optimizers.SGD(hp.Choice('momentum', values=[.9, .7, .5, .3]), lr=1e-5))
+  return model
+
+# randomsearch to manage all the iterations for this model:
+#   objective is to minimize loss
+#   cap the overall trials # to be max_trials
+#   train and evaluate the model (eliminating random fluctuations) 3 times per trial
+tuner = RandomSearch(build_model, objective='loss', max_trials=50, executions_per_trial=3, directory='my_dir', project_name='hello')
+
+tuner.search_space_summary()
+
+# start the search: train models with every possible hyperparameter according to your definition of the options to try
+tuner.search(dataset, epochs=100, verbose=0)
+
+# return top 10 trials based on the objective
+# lowest score: 33.35; units: 26; momentum: 0.9
+tuner.results_summary()
+
+# get the bst 4 models: pick the one with units=28; momentum=0.5
+models=tuner.get_best_models(num_models=4)
+print(models)
+
+# Based on tuner result: set neuron # of first layer = 28; momentum = 0.5 (also set lr=1e-5)
+dataset = windowed_dataset(x_train, window_size, batch_size, shuffle_buffer_size)
+
 model = tf.keras.models.Sequential([
-    # input_shape: input data is features (each feature set is of 20 (window_size) items)
-    tf.keras.layers.Dense(10, input_shape=[window_size], activation="relu"),
+    # neuron set to be 28
+    tf.keras.layers.Dense(28, input_shape=[window_size], activation="relu"),
     tf.keras.layers.Dense(10, activation="relu"),
-    # output layer
-    # that contains the 1-shape predicted value
     tf.keras.layers.Dense(1)
 ])
-# loss function = mse, which is commonly used for regression problems
-# hyperparameter tunning: learning rate (adjust from 1e-6 to callback: lr_schedule)
-#   lrs callback: start the lr at 1e-8 and every epoch increase it by a small amount (bigger epoch until 100--> bigger lr until 1e-8*(10^5)=1e-3)
-lr_scheldue = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-8 * 10**(epoch/20))
-#   lr start with 1e-8
-optimizer = tf.keras.optimizers.SGD(learning_rate=1e-8, momentum=0.9)
+
+# momentum set to be 0.5
+optimizer = tf.keras.optimizers.SGD(lr=1e-5, momentum=0.5)
 model.compile(loss="mse", optimizer=optimizer)
-# use training dataset to train the model
-# pre-adj 100-epoch result: loss=35.49
-# add callbacks for lr
-# post-adj 100-epoch
-history = model.fit(dataset, epochs=100, callbacks=[lr_scheldue], verbose=1)
+history = model.fit(dataset, epochs=100,  verbose=1)
 
-# plot loss against learning rate
-lrs = 1e-8 * (10 ** (np.arange(100) / 20))
-plt.semilogx(lrs, history.history["loss"])
-plt.axis([1e-8, 1e-3, 0, 300])
+# put predicted value into forecast
+forecast = []
+for time in range(len(series) - window_size):
+  forecast.append(model.predict(series[time:time + window_size][np.newaxis]))
 
-# model.predict, given series data, pass the model values from t to t+window_size and then get predicted value for the next time step
-print(series[split_time:split_time+window_size]) #input series
-# predicted next value (103.50): [np.newaxis] in model.predict() to keep the input shape consistent
-print(model.predict(series[split_time:split_time+window_size][np.newaxis]))
-# actual next value: 106.26
-print(series[split_time+window_size])
-
-# overall result of model.predict
-forecast=[]
-# time labels starting index of the input array (series) and the index value of predicted array (forecast)
-for time in range(len(series)-window_size):
-    forecast.append(
-        model.predict(series[time:time+window_size][np.newaxis])
-    )
-
-# x_valid is from [split_time:]
-# forecast's split_time is based on window_size points before split_time: is time label should start from split_time-window_size then
-print(len(x_valid))
-print(len(forecast)) #off by 20 (window_size)
-print(forecast)
-# rearrange the array to be in the same shape of x_valid
 forecast = forecast[split_time-window_size:]
-results = np.array(forecast)
-print(results.shape)
-# slice the array: for all elements, get (0,0) from the (461,1,1) array and make it (461,) array
-results = results[:, 0, 0]
-print(results.shape)
-print(results)
+results = np.array(forecast)[:, 0, 0]
 
-# visualize the comparison between forecasted values vs. actual values
-plt.figure(figsize=(10,6))
+plt.figure(figsize=(10, 6))
 plot_series(time_valid, x_valid)
 plot_series(time_valid, results)
 plt.show()
 
-# measure the accuracy: MAE=4.91
+# measure prediction accuracy: MAE=4.48 (better than previous two)
 print(tf.keras.metrics.mean_absolute_error(x_valid, results).numpy())
