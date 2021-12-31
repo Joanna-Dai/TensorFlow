@@ -1,3 +1,4 @@
+# CNN for sequence data
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
@@ -96,3 +97,21 @@ def model_forecast(model, series, window_size):
     forecast = model.predict(ds)
     return forecast
 
+# pass to model the series with np.newaxis to handle the Conv1Ds needed for the layer with the extra axis
+forecast = model_forecast(model, series[..., np.newaxis], window_size)
+print(forecast[split_time - window_size:-1])
+print(np.shape(forecast[split_time - window_size:-1]))
+# get the predicted values of valid set by extracting the element [-1 (the last value out of 20),0] from valid series
+results = forecast[split_time - window_size:-1, -1, 0]
+print(results)
+
+
+# plot predicted labels vs. actual labels
+plt.figure(figsize=(10, 6))
+plot_series(time_valid, x_valid)
+plot_series(time_valid, results)
+plt.show()
+
+
+# measure prediction accuracy: MAE=5.25 --> worse than previous prediction  --> not tuned conv layer or conv don't help
+print(tf.keras.metrics.mean_absolute_error(x_valid, results).numpy())
