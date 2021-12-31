@@ -136,3 +136,64 @@ plt.show()
 
 # measure the accuracy: MAE=4.91
 print(tf.keras.metrics.mean_absolute_error(x_valid, results).numpy())
+
+
+# tunning learning rate: from 1e-6 to callback
+dataset = windowed_dataset(x_train, window_size, batch_size, shuffle_buffer_size)
+
+model = tf.keras.models.Sequential([
+    tf.keras.layers.Dense(10, input_shape=[window_size], activation="relu"),
+    tf.keras.layers.Dense(10, activation="relu"),
+    tf.keras.layers.Dense(1)
+])
+
+# learning rate (adjust from 1e-6 to callback: lr_schedule)
+#   lrs callback: start the lr at 1e-8 and every epoch increase it by a small amount (bigger epoch until 100--> bigger lr until 1e-8*(10^5)=1e-3)
+lr_schedule = tf.keras.callbacks.LearningRateScheduler(
+    lambda epoch: 1e-8 * 10**(epoch / 20))
+optimizer = tf.keras.optimizers.SGD(lr=1e-8, momentum=0.9)
+model.compile(loss="mse", optimizer=optimizer)
+history = model.fit(dataset, epochs=100, callbacks=[lr_schedule], verbose=0)
+
+# plot loss against learning rate
+# result 1e-5 has a smaller loss
+lrs = 1e-8 * (10 ** (np.arange(100) / 20))
+plt.semilogx(lrs, history.history["loss"])
+plt.axis([1e-8, 1e-3, 0, 300])
+plt.semilogx(lrs, history.history["loss"])
+plt.axis([1e-6, 1e-4, 0, 300])
+plt.show()
+
+# fix learning rate to be 1e-5 (based on lrs result)
+# tunning window size: from 20 to 40 (increase input# to enhance prediction)
+window_size = 40
+dataset = windowed_dataset(x_train, window_size, batch_size, shuffle_buffer_size)
+
+model = tf.keras.models.Sequential([
+  tf.keras.layers.Dense(10, activation="relu", input_shape=[window_size]),
+  tf.keras.layers.Dense(10, activation="relu"),
+  tf.keras.layers.Dense(1)
+])
+
+optimizer = tf.keras.optimizers.SGD(lr=1e-5, momentum=0.9)
+model.compile(loss="mse", optimizer=optimizer)
+# tunning epoch: from 100 to 500
+# result: model loss=37.1
+history = model.fit(dataset, epochs=500, verbose=1)
+
+# put the predicted result into forecast
+forecast = []
+for time in range(len(series) - window_size):
+  forecast.append(model.predict(series[time:time + window_size][np.newaxis]))
+# reformat forecast to be in the same shape with x_valid
+forecast = forecast[split_time-window_size:]
+results = np.array(forecast)[:, 0, 0]
+
+# plot to compare the predicted and actual series
+plt.figure(figsize=(10, 6))
+plot_series(time_valid, x_valid)
+plot_series(time_valid, results)
+plt.show()
+
+# result (lr & window_size & epoch tunned model): MAE=4.63 (better than 4.91)
+print(tf.keras.metrics.mean_absolute_error(x_valid, results).numpy())
