@@ -90,10 +90,8 @@ def model_forecast(model, series, window_size):
     forecast = model.predict(ds)
     return forecast
 
-forecast = model_forecast(model, series[..., np.newaxis], window_size)
-results = forecast[split_time - window_size:-1]
-print(results)
-print(np.shape(results))
+forecast = model_forecast(model, series[..., np.newaxis], window_size)[:,0]
+results = forecast[split_time-window_size:-1]
 
 # plot the comparison
 def plot_series(time, series, format="-", start=0, end=None):
@@ -102,7 +100,7 @@ def plot_series(time, series, format="-", start=0, end=None):
     plt.ylabel("Value")
     plt.grid(True)
 
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10,6))
 plot_series(time_valid, x_valid)
 plot_series(time_valid, results)
 plt.show()
