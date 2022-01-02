@@ -1,4 +1,4 @@
-# KNMI climate data - simple RNN model
+# KNMI climate data - gated recurrent units(GRUs) & long-short term memory layers(LSTMs)
 
 # download txt file for daily temperature readings from the center of England from 1772 until 2020
 import os
@@ -80,10 +80,10 @@ np.random.seed(42)
 dataset = windowed_dataset(x_train, window_size, batch_size, shuffle_buffer_size)
 valid_dataset = windowed_dataset(x_valid, window_size, batch_size, shuffle_buffer_size)
 
-# model architecture
+# model architecture (GRUs)
 model = tf.keras.models.Sequential([
-  tf.keras.layers.SimpleRNN(100, input_shape=[None, 1], return_sequences=True),
-  tf.keras.layers.SimpleRNN(100),
+  tf.keras.layers.GRU(100, input_shape=[None, 1], return_sequences=True),
+  tf.keras.layers.GRU(100),
   tf.keras.layers.Dense(1),
 ])
 
