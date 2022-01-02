@@ -87,7 +87,7 @@ model = tf.keras.models.Sequential([
 
 optimizer = tf.keras.optimizers.SGD(lr=1e-4, momentum=0.7)
 model.compile(loss=tf.keras.losses.Huber(), optimizer=optimizer, metrics=["mae"])
-history = model.fit(dataset, epochs=100,  verbose=1, validation_data=valid_dataset)
+history = model.fit(dataset, epochs=10,  verbose=1, validation_data=valid_dataset)
 
 
 def model_forecast(model, series, window_size):
@@ -99,3 +99,39 @@ def model_forecast(model, series, window_size):
     forecast = model.predict(ds)
     return forecast
 
+forecast = model_forecast(model, series[split_time - window_size: -1], window_size)[:,0]
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10,6))
+plot_series(time_valid, x_valid)
+plot_series(time_valid, forecast)
+plt.show()
+
+plt.figure(figsize=(10,6))
+plot_series(time_valid[-100:], x_valid[-100:])
+plot_series(time_valid[-100:], forecast[-100:])
+plt.show()
+
+# can denormalize the series to calcuate the real mae
+# 10-epoch mae: 0.256
+mae = tf.keras.metrics.mean_absolute_error(x_valid, forecast).numpy()
+print(mae)
+
+# plot MAE and loss
+mae=history.history['mae']
+loss=history.history['loss']
+val_mae=history.history['val_mae']
+val_loss=history.history['val_loss']
+epochs=range(len(loss)) # Get number of epochs
+
+#plt.plot(epochs, mae, 'r')
+plt.plot(epochs, loss, 'b')
+#plt.plot(epochs, val_mae, 'g')
+plt.plot(epochs, val_loss, 'k')
+plt.title('Training and Validation Loss')
+plt.xlabel("Epochs")
+plt.ylabel("Accuracy")
+plt.legend(["Loss", "Validation Loss"])
+plt.figure()
+plt.show()
