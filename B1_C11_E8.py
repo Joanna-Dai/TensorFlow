@@ -1,4 +1,4 @@
-# KNMI climate data - gated recurrent units(GRUs) without dropout
+# KNMI climate data - long-short term memory layers (LSTMs) without dropout
 
 # download txt file for daily temperature readings from the center of England from 1772 until 2020
 import os
@@ -82,8 +82,8 @@ valid_dataset = windowed_dataset(x_valid, window_size, batch_size, shuffle_buffe
 
 # model architecture (GRUs)
 model = tf.keras.models.Sequential([
-  tf.keras.layers.GRU(100, input_shape=[None, 1], return_sequences=True),
-  tf.keras.layers.GRU(100),
+  tf.keras.layers.LSTM(100, input_shape=[None, 1], return_sequences=True),
+  tf.keras.layers.LSTM(100),
   tf.keras.layers.Dense(1),
 ])
 
@@ -116,7 +116,7 @@ plot_series(time_valid[-100:], forecast[-100:])
 plt.show()
 
 # can denormalize the series to calcuate the real mae
-# 10-epoch mae: 0.321
+# 10-epoch mae:
 mae = tf.keras.metrics.mean_absolute_error(x_valid, forecast).numpy()
 print(mae)
 

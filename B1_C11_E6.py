@@ -1,4 +1,4 @@
-# KNMI climate data - gated recurrent units(GRUs) without dropout
+# KNMI climate data - gated recurrent units(GRUs) with dropout
 
 # download txt file for daily temperature readings from the center of England from 1772 until 2020
 import os
@@ -80,10 +80,14 @@ np.random.seed(42)
 dataset = windowed_dataset(x_train, window_size, batch_size, shuffle_buffer_size)
 valid_dataset = windowed_dataset(x_valid, window_size, batch_size, shuffle_buffer_size)
 
-# model architecture (GRUs)
+# model architecture (GRUs with dropout)
 model = tf.keras.models.Sequential([
-  tf.keras.layers.GRU(100, input_shape=[None, 1], return_sequences=True),
-  tf.keras.layers.GRU(100),
+  # using dropout to mitigate overfitting:
+    # dropout will randomly drop out 10% of x inputs
+    # recurrent_dropout will randomly drop out 10% of the recurrent values (the r connected passed between time steps)
+    # tf.keras maintains the consistency of above dropouts (recommended by Gal about same pattern of dropout units at every time step)
+  tf.keras.layers.GRU(100, input_shape=[None, 1], return_sequences=True, dropout=0.1, recurrent_dropout=0.1),
+  tf.keras.layers.GRU(100, dropout=0.1, recurrent_dropout=0.1),
   tf.keras.layers.Dense(1),
 ])
 
@@ -116,7 +120,7 @@ plot_series(time_valid[-100:], forecast[-100:])
 plt.show()
 
 # can denormalize the series to calcuate the real mae
-# 10-epoch mae: 0.321
+# 10-epoch mae: 0.322
 mae = tf.keras.metrics.mean_absolute_error(x_valid, forecast).numpy()
 print(mae)
 
