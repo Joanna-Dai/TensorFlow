@@ -10,7 +10,7 @@ def format_image(image, label):
     image = tf.image.resize(image, (224, 224)) / 255.0
     return  image, label
 
-
+# split dataset into train, val and test datasets; metadata is narratives info
 (raw_train, raw_validation, raw_test), metadata = tfds.load(
     'cats_vs_dogs',
     split=['train[:80%]', 'train[80%:90%]', 'train[90%:]'],
@@ -18,7 +18,9 @@ def format_image(image, label):
     as_supervised=True,
 )
 
+# num of lines
 num_examples = metadata.splits['train'].num_examples
+# num of unique values
 num_classes = metadata.features['label'].num_classes
 print(num_examples)
 print(num_classes)
