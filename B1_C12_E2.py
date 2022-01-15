@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pylab as plt
 
+# step 1: build and save the model
+
 import tensorflow as tf
 import tensorflow_hub as hub
 import tensorflow_datasets as tfds
@@ -25,6 +27,7 @@ num_classes = metadata.features['label'].num_classes
 print(num_examples)
 print(num_classes)
 
+# shuffle the dataset with buffer_size=num_eg/4, split each window into feature image and label, batch the dataset with each batch as batch_size
 BATCH_SIZE = 32
 train_batches = raw_train.shuffle(num_examples // 4).map(format_image).batch(BATCH_SIZE).prefetch(1)
 validation_batches = raw_validation.map(format_image).batch(BATCH_SIZE).prefetch(1)
@@ -33,4 +36,4 @@ test_batches = raw_test.map(format_image).batch(1)
 for image_batch, label_batch in train_batches.take(1):
     pass
 
-image_batch.shape
+#image_batch.shape
