@@ -71,21 +71,21 @@ tf.saved_model.save(model, CATS_VS_DOGS_SAVED_MODEL)
 
 
 # Step 2: covert the model to TensorFlow lite
+
+# take the saved model and convert it into .tflite model (hereby converted_model.tflite)
 converter = tf.lite.TFLiteConverter.from_saved_model(CATS_VS_DOGS_SAVED_MODEL)
-
-converter.optimizations = [tf.lite.Optimize.DEFAULT]
-
-def representative_data_gen():
-    for input_value, _ in test_batches.take(100):
-        yield [input_value]
-
-converter.representative_dataset = representative_data_gen
-converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-
 tflite_model = converter.convert()
 tflite_model_file = 'converted_model.tflite'
 
-with open(tflite_model_file, "wb") as f:
+with open(tflite_model_file,'wb') as f:
     f.write(tflite_model)
 
-tflite_model_file = 'converted_model_withoptimizationsandquant.tflite'
+# after having the file, instantiate an interpretr with it
+interpreter = tf.lite.Interpreter(model_path = tflite_model_file)
+interpreter.allocate_tensors()
+
+# load them into variables
+input_index = interpreter.get_input_details()[0]["index"]
+output_index = interpreter.get_output_details()[0]["index"]
+
+predictions = []
