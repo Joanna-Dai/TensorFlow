@@ -8,6 +8,7 @@ import tensorflow_hub as hub
 import tensorflow_datasets as tfds
 
 
+# reformat the images to be the right size for both training and inference
 def format_image(image, label):
     image = tf.image.resize(image, (224, 224)) / 255.0
     return  image, label
@@ -89,3 +90,23 @@ input_index = interpreter.get_input_details()[0]["index"]
 output_index = interpreter.get_output_details()[0]["index"]
 
 predictions = []
+
+# take 100 images from test_batches and test them
+test_labels, test_imgs = [], []
+for img, label in test_batches.take(100):
+    interpreter.set_tensor(input_index, img)
+    interpreter.invoke()
+    predictions.append(interpreter.get_tensor(output_index))
+    test_labels.append(label.numpy()[0])
+    test_imgs.append(img)
+
+# see how the predictions did against the labels
+score = 0
+for item in range(0,99):
+    prediction = np.argmax(predictions[item])
+    label = test_labels[item]
+    if prediction==label:
+        score = score+1
+
+print("out of 100 predictions i got" + str(score) + " correct")
+
