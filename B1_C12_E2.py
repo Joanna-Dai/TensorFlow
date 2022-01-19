@@ -105,8 +105,14 @@ score = 0
 for item in range(0,99):
     prediction = np.argmax(predictions[item])
     label = test_labels[item]
-    if prediction==label:
+    if prediction == label:
         score = score+1
+print("out of 100 predictions I got" + str(score) + " correct")
 
-print("out of 100 predictions i got" + str(score) + " correct")
+# visualize the model output
+for index in range(0,99):
+    plt.figure(figsize=(6,3))
+    plt.subplot(1,2,1)
+    plot_image(index, prediction, test_labels, test_imgs)
+    plt.show()
 
