@@ -72,6 +72,7 @@ tf.saved_model.save(model, CATS_VS_DOGS_SAVED_MODEL)
 
 
 # Step 2: covert the model to TensorFlow lite
+# tensorflow lite: designed to run on devices with tiny amounts of memory (TinyML)
 
 # take the saved model and convert it into .tflite model (hereby converted_model.tflite)
 converter = tf.lite.TFLiteConverter.from_saved_model(CATS_VS_DOGS_SAVED_MODEL)
@@ -107,36 +108,10 @@ for item in range(0,99):
     label = test_labels[item]
     if prediction == label:
         score = score+1
-print("out of 100 predictions I got" + str(score) + " correct")
+print("out of 100 predictions I got " + str(score) + " correct")
 
-# visualize the model output
-class_names = ['cat', 'dog']
-
-def plot_image(i, predictions_array, true_label, img):
-    predictions_array, true_label, img = predictions_array[i], true_label[i], img[i]
-    plt.grid(False)
-    plt.xticks([])
-    plt.yticks([])
-    img = np.squeeze(img)
-    plt.imshow(img, cmap=plt.cm.binary)
-    predicted_label = np.argmax(predictions_array)
-    if predicted_label == true_label:
-        color = 'green'
-    else:
-        color = 'red'
-    plt.xlabel("{} {:2.0f}% ({})".format(class_names[predicted_label],
-                                         100 * np.max(predictions_array),
-
-                                         class_names[true_label]), color=color)
-
-for index in range(0,99):
-    plt.figure(figsize=(6,3))
-    plt.subplot(1,2,1)
-    plot_image(index, prediction, test_labels, test_imgs)
-    plt.show()
-
-
-# Step 3: Optimize/Quantize the Model
+# Step 3: Optimize/Quantize the Model (for a mobile environment)
+# reduce model size while maintain its accuracy
 
 converter = tf.lite.TFLiteConverter.from_saved_model(CATS_VS_DOGS_SAVED_MODEL)
 # dynamic range quantization: set the optimizations property prior to performing the conversion
@@ -144,10 +119,19 @@ converter = tf.lite.TFLiteConverter.from_saved_model(CATS_VS_DOGS_SAVED_MODEL)
 #   OPTIMIZE_FOR_SIZE --> make the model as small as possible
 #   OPTIMIZE_FOR_LATENCY --> reduce inference time as much as possible
 #   DEFAULT --> the best balance between size and latency
-# model becomes 4x smaller with 2-3x speedup, but the accuracy dropped from 99% to 94%
+# model becomes 4x smaller with 2-3x speedup, but the accuracy dropped from 99% to 94% if converter.optimizations only
 converter.optimizations= [tf.lite.Optimize.DEFAULT]
 
+# full integer quantization (other option: float16 quantization): result in slightly larger model but maintain accuracy (in comparison with having converter.optimizations only)
+# representative dataset: tells the converter what range of data to expect, allows converter to flow through the model and find where to best make conversations
+def representative_dat_gen():
+    for input_value, _ in test_batches.take(100):
+        yield [input_value]
 
+# representative_dat_gen is not callable, remove "()"
+converter.representative_dataset = representative_dat_gen
+# ensure the precision is quantized in only those part of model (in this case to from 32-bit floating point to INT8 8-bit integer)
+converter.target_spec.supported_ops=[tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 
 tflite_model = converter.convert()
 tflite_model_file = 'converted_model.tflite'
@@ -155,3 +139,4 @@ tflite_model_file = 'converted_model.tflite'
 with open(tflite_model_file, "wb") as f:
     f.write(tflite_model)
 
+tflite_model_file = 'converted_model_withoptimizationsandquant.tflite'
