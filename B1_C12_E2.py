@@ -110,9 +110,48 @@ for item in range(0,99):
 print("out of 100 predictions I got" + str(score) + " correct")
 
 # visualize the model output
+class_names = ['cat', 'dog']
+
+def plot_image(i, predictions_array, true_label, img):
+    predictions_array, true_label, img = predictions_array[i], true_label[i], img[i]
+    plt.grid(False)
+    plt.xticks([])
+    plt.yticks([])
+    img = np.squeeze(img)
+    plt.imshow(img, cmap=plt.cm.binary)
+    predicted_label = np.argmax(predictions_array)
+    if predicted_label == true_label:
+        color = 'green'
+    else:
+        color = 'red'
+    plt.xlabel("{} {:2.0f}% ({})".format(class_names[predicted_label],
+                                         100 * np.max(predictions_array),
+
+                                         class_names[true_label]), color=color)
+
 for index in range(0,99):
     plt.figure(figsize=(6,3))
     plt.subplot(1,2,1)
     plot_image(index, prediction, test_labels, test_imgs)
     plt.show()
+
+
+# Step 3: Optimize/Quantize the Model
+
+converter = tf.lite.TFLiteConverter.from_saved_model(CATS_VS_DOGS_SAVED_MODEL)
+# dynamic range quantization: set the optimizations property prior to performing the conversion
+# other options:
+#   OPTIMIZE_FOR_SIZE --> make the model as small as possible
+#   OPTIMIZE_FOR_LATENCY --> reduce inference time as much as possible
+#   DEFAULT --> the best balance between size and latency
+# model becomes 4x smaller with 2-3x speedup, but the accuracy dropped from 99% to 94%
+converter.optimizations= [tf.lite.Optimize.DEFAULT]
+
+
+
+tflite_model = converter.convert()
+tflite_model_file = 'converted_model.tflite'
+
+with open(tflite_model_file, "wb") as f:
+    f.write(tflite_model)
 
